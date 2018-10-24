@@ -97,9 +97,9 @@ describe( 'Tests', ( done ) =>
             {
                 console.log({ start, end, buff_start, buff_end });
                 console.log({ buf: buff_slice, str: str_slice });
-            }
 
-            assert.ok( multibuffer.length === data.length && buff_slice === str_slice, 'MultiBuffer is not sliced properly' );
+                assert.fail( 'MultiBuffer is not sliced properly' );
+            }
         }
 	})
     .timeout( 30000 );
@@ -128,10 +128,8 @@ describe( 'Tests', ( done ) =>
                     console.log({ buf: multibuffer.length, data: data.length });
                     console.log({ before, after: { data, buff: Slice(multibuffer) } });
 
-                    process.exit();
+                    assert.fail( 'MultiBuffer is not spliced properly' );
                 }
-
-                assert.ok( buff_splice === str_splice && multibuffer.length === data.length, 'MultiBuffer is not spliced properly' );
             }
         }
 	})
@@ -162,10 +160,8 @@ describe( 'Tests', ( done ) =>
                     console.log({ buf: multibuffer.length, data: data.length });
                     console.log({ before, after: { data, buff: Slice(multibuffer) } });
 
-                    process.exit();
+                    assert.fail( 'MultiBuffer is not spliced properly' );
                 }
-
-                assert.ok( buff_splice === str_splice && multibuffer.length === data.length && Slice(multibuffer) === data, 'MultiBuffer is not spliced properly' );
             }
         }
 	}).timeout(30000);
@@ -204,11 +200,67 @@ describe( 'Tests', ( done ) =>
 	})
     .timeout( 30000 );
 
+    it('should find position with indexOf with buffer needle', function()
+	{
+		const blocks = 10, multibuffer = new MultiBuffer(), data = Buffer.from( FillBuffer( multibuffer, blocks, 10 ), 'utf8');
+
+        assert.ok( multibuffer.length === data.length && multibuffer.slice(0).length === blocks && Slice( multibuffer ) === data.toString('utf8'), 'MultiBuffer is not initialized properly' );
+
+        for( let i = 0; i < 1000000 * TEST_RUNS_FACTOR; ++i )
+        {
+            let index = Random( 0, data.length - 1 ), length = Random( 1, 30 ), offset = Math.random() < 0.2 ? 0 : Random( 0, data.length - 1 );
+            let needle = data.slice( index, length );
+            let data_index = data.indexOf( needle, offset );
+            let buff_index = multibuffer.indexOf( needle, offset );
+
+            if( data_index !== buff_index )
+            {
+                console.log({ data_index, buff_index, index, offset, needle: needle.toString('utf8'), data: data.toString('utf8'), buffer: multibuffer.slice(0).map( b => b.toString() ) });
+
+                assert.fail( 'MultiBuffer is not searched properly' );
+            }
+        }
+
+        assert.ok( multibuffer.length === data.length && multibuffer.slice(0).length === blocks && Slice( multibuffer ) === data.toString('utf8'), 'MultiBuffer is not searched properly' );
+	})
+    .timeout( 30000 );
+
+    it('should find position with indexOf  with string needle', function()
+	{
+		const blocks = 10, multibuffer = new MultiBuffer(), data = FillBuffer( multibuffer, blocks, 10 );
+
+        assert.ok( multibuffer.length === data.length && multibuffer.slice(0).length === blocks && Slice( multibuffer ) === data, 'MultiBuffer is not initialized properly' );
+
+        for( let i = 0; i < 1000000 * TEST_RUNS_FACTOR; ++i )
+        {
+            let index = Random( 0, data.length - 1 ), length = Random( 1, 30 ), offset = Math.random() < 0.2 ? 0 : Random( 0, data.length - 1 );
+            let needle = data.substr( index, length );
+            let data_index = data.indexOf( needle, offset );
+            let buff_index = multibuffer.indexOf( needle, offset, 'utf8' );
+
+            if( data_index !== buff_index )
+            {
+                console.log({ data_index, buff_index, index, offset, needle: needle.toString('utf8'), data: data.toString('utf8'), buffer: multibuffer.slice(0).map( b => b.toString() ) });
+
+                assert.fail( 'MultiBuffer is not searched properly' );
+            }
+        }
+
+        assert.ok( multibuffer.length === data.length && multibuffer.slice(0).length === blocks && Slice( multibuffer ) === data, 'MultiBuffer is not searched properly' );
+	})
+    .timeout( 30000 );
+
     it('shoud test corner cases', function()
     {
         const multibuffer = new MultiBuffer( Buffer.from('01234', 'utf8'), Buffer.from('56789', 'utf8'));
 
+        assert.ok( multibuffer.indexOf( '9', 'utf8' ) === 9, 'MultiBuffer is not searched properly' );
+        assert.ok( multibuffer.indexOf( '9', 20 ) === -1, 'MultiBuffer is not searched properly' );
+        assert.ok( multibuffer.indexOf( '', 3 ) === 3, 'MultiBuffer is not searched properly' );
+        assert.ok( multibuffer.indexOf( '' ) === 0, 'MultiBuffer is not searched properly' );
+        assert.ok( multibuffer.indexOf( '', 20 ) === -1, 'MultiBuffer is not searched properly' );
         assert.ok( Splice( multibuffer, 0, 10, Buffer.from('abcdef', 'utf8')) === '0123456789' && Slice( multibuffer ) === 'abcdef' );
+        assert.ok( Splice( multibuffer, -1, Buffer.from( 'ghi' )) === '' && Slice( multibuffer ) === 'abcdeghif' );
     });
 
     it('should be faster than concatenating buffers', function()
