@@ -166,6 +166,17 @@ describe( 'Tests', ( done ) =>
         }
 	}).timeout(30000);
 
+    it('should spliceConcat multibuffer', function()
+	{
+        const multibuffer = new MultiBuffer( Buffer.from('01234', 'utf8'), Buffer.from('56789', 'utf8'), Buffer.from('abcdef', 'utf8'));
+
+        assert.ok( multibuffer.length === 16 && multibuffer.slice(0).length === 3 && Slice( multibuffer, 0 ) === '0123456789abcdef', 'MultiBuffer is not initialized properly' );
+
+        assert.ok( multibuffer.spliceConcat( 0, 0 ).toString('utf8') === '' && multibuffer.slice(0).length === 3 && Slice( multibuffer, 0 ) === '0123456789abcdef', 'MultiBuffer is not spliceConcated properly' );
+        assert.ok( multibuffer.spliceConcat( 0, 4 ).toString('utf8') === '0123' && multibuffer.slice(0).length === 3 && Slice( multibuffer, 0 ) === '456789abcdef', 'MultiBuffer is not spliceConcated properly' );
+        assert.ok( multibuffer.spliceConcat( 0 ).toString('utf8') === '456789abcdef' && multibuffer.slice(0).length === 0 && Slice( multibuffer, 0 ) === '', 'MultiBuffer is not spliceConcated properly' );
+	});
+
     it('should get at index', function()
 	{
 		const blocks = 500, multibuffer = new MultiBuffer(), data = FillBuffer( multibuffer, blocks, 10 );
