@@ -283,6 +283,7 @@ describe( 'Tests', ( done ) =>
         assert.ok( multibuffer.indexOf( '', 20 ) === -1, 'MultiBuffer is not searched properly' );
         assert.ok( Splice( multibuffer, 0, 10, Buffer.from('abcdef', 'utf8')) === '0123456789' && Slice( multibuffer ) === 'abcdef' );
         assert.ok( Splice( multibuffer, -1, Buffer.from( 'ghi' )) === '' && Slice( multibuffer ) === 'abcdeghif' );
+        assert.ok( Splice( multibuffer ) === 'abcdeghif' && Slice( multibuffer ) === '' );
     });
 
     it('should be faster than concatenating buffers', function()
