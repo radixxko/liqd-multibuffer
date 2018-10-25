@@ -250,6 +250,17 @@ describe( 'Tests', ( done ) =>
 	})
     .timeout( 30000 );
 
+    it('should clear buffer', function()
+	{
+		const blocks = 10, multibuffer = new MultiBuffer(), data = FillBuffer( multibuffer, blocks, 10 );
+
+        assert.ok( multibuffer.length === data.length && multibuffer.slice(0).length === blocks && Buffer.concat(multibuffer.slice(0)).toString('utf8') === data, 'MultiBuffer is not initialized properly' );
+
+        multibuffer.clear();
+
+        assert.ok( multibuffer.length === 0 && multibuffer.slice().length === 0 && Slice(multibuffer) === '', 'MultiBuffer is not cleared properly' );
+	})
+
     it('shoud test corner cases', function()
     {
         const multibuffer = new MultiBuffer( Buffer.from('01234', 'utf8'), Buffer.from('56789', 'utf8'));
