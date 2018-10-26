@@ -211,6 +211,44 @@ describe( 'Tests', ( done ) =>
 	})
     .timeout( 30000 );
 
+    it('should check with equals', function()
+	{
+        for( let j = 0; j < 1000 * TEST_RUNS_FACTOR; ++j )
+        {
+    		const blocks = 10, multibuffer = new MultiBuffer(), data = Buffer.from( FillBuffer( multibuffer, blocks, 10 ), 'utf8' );
+
+            assert.ok( multibuffer.length === data.length && multibuffer.slice(0).length === blocks && Slice( multibuffer ) === data.toString('utf8'), 'MultiBuffer is not initialized properly' );
+
+            for( let i = 0; i < 1000; ++i )
+            {
+                let index = Random( 0, data.length - 1 ), length = Random( 1, data.length - index );
+                let needle = data.slice( index, index + length );
+                let offset = Math.random() < 0.1 ? index : Random( 0, data.length );
+                let equals_length = Random( 1, needle.length + 1 );
+                let data_index = data.indexOf( needle.slice( 0, Math.min( needle.length, equals_length )), offset );
+                let data_found = data_index === offset;
+
+                if( data_found !== multibuffer.equals( needle, offset, equals_length ))
+                {
+                    console.log(
+                    {
+                        needle,
+                        offset,
+                        equals_length,
+                        data: data_found,
+                        data_i: data_index,
+                        buff: multibuffer.equals( needle, offset === 0 ? undefined : offset, equals_length )
+                    });
+
+                    assert.fail( 'MultiBuffer is not compared properly' );
+                }
+            }
+
+            assert.ok( multibuffer.length === data.length && multibuffer.slice(0).length === blocks && Slice( multibuffer ) === data.toString('utf8'), 'MultiBuffer is not compared properly' );
+        }
+	})
+    .timeout( 30000 );
+
     it('should find position with indexOf with buffer needle', function()
 	{
 		const blocks = 10, multibuffer = new MultiBuffer(), data = Buffer.from( FillBuffer( multibuffer, blocks, 10 ), 'utf8');
@@ -276,6 +314,12 @@ describe( 'Tests', ( done ) =>
     {
         const multibuffer = new MultiBuffer( Buffer.from('01234', 'utf8'), Buffer.from('56789', 'utf8'));
 
+        assert.ok( multibuffer.equals( Buffer.from('78') ) === false, 'MultiBuffer is not compared properly' );
+        assert.ok( multibuffer.equals( Buffer.from('78'), 0 ) === false, 'MultiBuffer is not compared properly' );
+        assert.ok( multibuffer.equals( Buffer.from('78'), 0, 50 ) === false, 'MultiBuffer is not compared properly' );
+        assert.ok( multibuffer.equals( Buffer.from('78'), 7 ) === true, 'MultiBuffer is not compared properly' );
+        assert.ok( multibuffer.equals( Buffer.from('78'), 7, 50 ) === true, 'MultiBuffer is not compared properly' );
+        assert.ok( multibuffer.equals( Buffer.from('78'), 50, 50 ) === false, 'MultiBuffer is not compared properly' );
         assert.ok( multibuffer.indexOf( '9', 'utf8' ) === 9, 'MultiBuffer is not searched properly' );
         assert.ok( multibuffer.indexOf( '9', 20 ) === -1, 'MultiBuffer is not searched properly' );
         assert.ok( multibuffer.indexOf( '', 3 ) === 3, 'MultiBuffer is not searched properly' );
